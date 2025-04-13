@@ -52,11 +52,17 @@ export default function PdfUploader({ setPageImages, setClassifications }: PdfUp
 
       setPageImages(images);
 
+      // PDFデータをBase64エンコード
+      const pdfBinary = btoa(
+        new Uint8Array(fileReader.result as ArrayBuffer)
+          .reduce((data, byte) => data + String.fromCharCode(byte), "")
+      );
+
       // OCR結果を取得するAPIを呼び出し
       const response = await fetch("/api/ocr", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pageCount: pdf.numPages }),
+        body: JSON.stringify({ pageCount: pdf.numPages, pdfBinary }),
       });
 
       if (response.ok) {

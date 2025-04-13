@@ -1,0 +1,3 @@
+### Test HTTP Trigger
+GET http://localhost:7071/api/http_trigger?name=John
+

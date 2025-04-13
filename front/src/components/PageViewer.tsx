@@ -27,7 +27,7 @@ export default function PageViewer({ pageImages, classifications, selectedClassi
    * @returns {number[]} 分類に関連付けられたページ番号の配列
    */
   const getPagesForClassification = (classificationName: string) => {
-    const classification = classifications.find((c) => c.name === classificationName);
+    const classification = classifications.find((c) => c.category === classificationName);
     return classification ? classification.pages.map((page) => page.pageNumber) : [];
   };
 

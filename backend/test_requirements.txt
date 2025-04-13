@@ -1,0 +1,5 @@
+# test_requirements.txt
+pytest
+pytest-mock
+flake8
+mypy

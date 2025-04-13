@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Classification } from "@/types/Classification";
+import MarkdownPreviewPopup from "./MarkdownPreviewPopup/MarkdownPreviewPopup"; // 新しいコンポーネントをインポート
 
 interface ClassificationManagerProps {
   classifications: Classification[]; // 現在の分類リスト
@@ -28,6 +29,8 @@ export default function ClassificationManager({
 }: ClassificationManagerProps) {
   const [expandedClassifications, setExpandedClassifications] = useState<Set<string>>(new Set()); // 展開中の分類セット
   const [editingClassification, setEditingClassification] = useState<number | null>(null); // 編集中の分類インデックス
+  const [popupContent, setPopupContent] = useState<string | null>(null); // ポップアップの内容を管理
+  const [popupVisible, setPopupVisible] = useState(false); // ポップアップの表示状態を管理
 
   /**
    * 分類の展開/折りたたみを切り替える関数
@@ -39,6 +42,11 @@ export default function ClassificationManager({
       const newSet = new Set(prev);
       if (newSet.has(classificationName)) {
         newSet.delete(classificationName);
+        // アコーディオンが閉じられた場合、ポップアップを非表示にする
+        if (popupContent === classifications.find(c => c.category === classificationName)?.content) {
+          setPopupVisible(false);
+          setPopupContent(null);
+        }
       } else {
         newSet.add(classificationName);
       }
@@ -95,8 +103,8 @@ export default function ClassificationManager({
                 className="flex items-center justify-between cursor-pointer"
                 onClick={() => {
                   if (editingClassification === null) {
-                    toggleClassificationExpansion(classification.name);
-                    setSelectedClassification(classification.name); // Expanderクリック時に選択
+                    toggleClassificationExpansion(classification.category);
+                    setSelectedClassification(classification.category); // Expanderクリック時に選択
                   }
                 }}
               >
@@ -106,10 +114,10 @@ export default function ClassificationManager({
                     <input
                       type="text"
                       className="flex-grow p-1 border rounded bg-white dark:bg-gray-800 text-black dark:text-white"
-                      value={classification.name}
+                      value={classification.category}
                       onChange={(e) => {
                         const newClassifications = [...classifications];
-                        newClassifications[index] = { ...classification, name: e.target.value };
+                        newClassifications[index] = { ...classification, category: e.target.value };
                         setClassifications(newClassifications);
                       }}
                       onKeyDown={(e) => {
@@ -122,7 +130,7 @@ export default function ClassificationManager({
                   ) : (
                     <div className="flex items-center">
                       <span className="font-bold text-blue-500 dark:text-blue-400">
-                        {classification.name}
+                        {classification.category}
                       </span>
                       {/* 編集ボタン */}
                       <button
@@ -142,12 +150,12 @@ export default function ClassificationManager({
                   className="ml-2 text-red-500 hover:text-red-700 dark:hover:text-red-300"
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (window.confirm(`「${classification.name}」を削除しますか？`)) {
+                    if (window.confirm(`「${classification.category}」を削除しますか？`)) {
                       const newClassifications = classifications.filter((_, i) => i !== index);
                       setClassifications(newClassifications);
                       setExpandedClassifications((prev) => {
                         const newSet = new Set(prev);
-                        newSet.delete(classification.name);
+                        newSet.delete(classification.category);
                         return newSet;
                       });
                     }
@@ -157,7 +165,7 @@ export default function ClassificationManager({
                 </button>
               </div>
               {/* 分類が展開されている場合の詳細表示 */}
-              {expandedClassifications.has(classification.name) && (
+              {expandedClassifications.has(classification.category) && (
                 <div className="mt-2">
                   {/* ページごとのスイッチ型UI */}
                   <div className="mb-2">
@@ -189,17 +197,42 @@ export default function ClassificationManager({
                     ))}
                   </div>
                   {/* テキストエリア */}
-                  <textarea
-                    className="w-full p-2 border rounded bg-white dark:bg-gray-800 text-black dark:text-white"
-                    value={classification.text}
-                    style={{ height: `${Math.max(100, classification.text.split("\n").length * 24)}px` }}
-                    onChange={(e) => {
-                      const newClassifications = [...classifications];
-                      newClassifications[index] = { ...classification, text: e.target.value };
-                      setClassifications(newClassifications);
-                    }}
-                    onClick={() => setSelectedClassification(classification.name)}
-                  />
+                  <div className="relative">
+                    <textarea
+                      className="w-full p-2 border rounded bg-white dark:bg-gray-800 text-black dark:text-white"
+                      value={classification.content}
+                      style={{ height: `${Math.max(100, classification.category.split("\n").length * 24)}px` }}
+                      onChange={(e) => {
+                        const newClassifications = [...classifications];
+                        newClassifications[index] = { ...classification, content: e.target.value };
+                        setClassifications(newClassifications);
+                      }}
+                      onClick={() => setSelectedClassification(classification.category)}
+                    />
+                    {/* プレビューアイコン */}
+                    <button
+                      className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                      onClick={(e) => {
+                        e.stopPropagation(); // イベントのバブリングを防止
+                        if (popupContent !== classification.content) {
+                          setPopupContent(classification.content); // 新しい内容を設定
+                          setPopupVisible(true); // ポップアップを表示
+                        }
+                      }}
+                    >
+                      🔍
+                    </button>
+                  </div>
+                  {/* MarkdownプレビューPopup */}
+                  {popupVisible && popupContent && (
+                    <MarkdownPreviewPopup
+                      content={popupContent}
+                      onClose={() => {
+                        setPopupVisible(false); // ポップアップを非表示
+                        setPopupContent(null); // 内容をリセット
+                      }}
+                    />
+                  )}
                 </div>
               )}
             </div>
@@ -211,14 +244,14 @@ export default function ClassificationManager({
         className="flex items-center justify-center w-full p-2 mt-4 text-white bg-green-500 rounded hover:bg-green-600"
         onClick={() => {
           const newClassification = {
-            name: `新しい分類 ${classifications.length + 1}`,
+            category: `新しい分類 ${classifications.length + 1}`,
             pages: [],
-            text: "",
+            content: "",
           };
           setClassifications([...classifications, newClassification]);
           setExpandedClassifications((prev) => {
             const newSet = new Set(prev);
-            newSet.add(newClassification.name);
+            newSet.add(newClassification.category);
             return newSet;
           });
         }}
