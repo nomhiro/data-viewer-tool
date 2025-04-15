@@ -8,7 +8,7 @@ url = "http://localhost:7071/api/"
 
 # テスト用PDFファイルのパス
 # pdf_path = "./test/消費者をエンパワーするデジタル技術に関する専門調査会の設置の趣旨及び今後の進め方_202404.pdf"
-pdf_path = "./test/消費者トラブルの現状.pdf"
+pdf_path = "./test/【データ道】活動結果報告_TS.pdf"
 output_path = "./test/"
 
 # output.json と output.txt を削除
