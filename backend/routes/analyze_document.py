@@ -46,12 +46,15 @@ def analyze_document_structure_route(req: func.HttpRequest) -> func.HttpResponse
     try:
         # リクエストBodyをJSONとして解析
         req_body = req.get_json()
-        system_prompt = req_body.get("system_prompt")  # 分類用のプロンプト
+        classification_prompt = req_body.get(
+            "classification_prompt")  # 分類用のプロンプト
         pdf_binary = req_body.get("pdf_binary")  # PDFファイルのバイナリデータ
 
         # システムメッセージに、システム上固定の推論の指示を追加
         # TOOD: 本来はDBなどに外だし
         system_prompt = f"""あなたは与えられた業務ドキュメントを分析し、ドキュメントの内容を考慮して構造的な文書にする役割です。
+
+# 指示
 ドキュメント内容を情報のまとまりで分類分けしてください。
 分類に紐づくドキュメントのページ番号を出力してください。
 
@@ -65,9 +68,11 @@ def analyze_document_structure_route(req: func.HttpRequest) -> func.HttpResponse
     - 「# ページ番号」と「## ページ内容」が与えられます。
     - 与えられた「# ページ番号」以外のページ番号は出力してはいけません。
     - page_numberは分類ごとに被っても構いません。
+- 「ユーザから指示された分類」は必ず含むようにしてください。
+- 分類の追加は自由です。
 
-# ユーザからの追加指示
-{system_prompt}
+# ユーザから指示された分類
+{classification_prompt}
 
 # 出力形式
 - category: 分類の各項目名

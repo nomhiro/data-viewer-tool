@@ -8,7 +8,8 @@ url = "http://localhost:7071/api/"
 
 # テスト用PDFファイルのパス
 # pdf_path = "./test/消費者をエンパワーするデジタル技術に関する専門調査会の設置の趣旨及び今後の進め方_202404.pdf"
-pdf_path = "./test/【データ道】活動結果報告_TS.pdf"
+pdf_path = "./test/消費者トラブルの現状.pdf"
+# pdf_path = "./test/【データ道】活動結果報告_TS.pdf"
 output_path = "./test/"
 
 # output.json と output.txt を削除
@@ -24,11 +25,11 @@ with open(pdf_path, "rb") as pdf_file:
     encoded_pdf = base64.b64encode(pdf_file.read()).decode("utf-8")
 
 # システムプロンプトを定義
-system_prompt = """"""
+classification_prompt = """背景、まとめ"""
 
 # リクエストペイロードを作成
 payload = {
-    "system_prompt": system_prompt,
+    "classification_prompt": classification_prompt,
     "pdf_binary": encoded_pdf
 }
 
